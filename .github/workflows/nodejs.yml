@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -26,5 +26,20 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    # ✅ Run tests and generate a JUnit-style report for GitHub logs
     - name: Run tests
-      run: npm test
+      run: |
+        mkdir -p test-results
+        npm test -- --ci --reporters=default --reporters=jest-junit
+      env:
+        JEST_JUNIT_OUTPUT_DIR: ./test-results
+        JEST_JUNIT_OUTPUT_NAME: results.xml
+
+    # ✅ Upload test results as an artifact (downloadable)
+    - name: Upload Test Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: jest-test-report
+        path: test-results/
+
